@@ -17,4 +17,4 @@ source venv/bin/activate  # Windows: venv\\Scripts\\activate
 pip install -r requirements.txt
 cp .env.example .env
 # Editeaza .env cu cheile tale API
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload"# ALL_AI" 
