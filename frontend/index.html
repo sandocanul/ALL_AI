@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIG AI Platform</title>
+    <!-- Librărie pentru formatare Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+    <!-- Ecranul de Autentificare -->
+    <div id="auth-container" class="container">
+        <div class="auth-box">
+            <h2>Bine ai venit la BIG AI</h2>
+            <p>Conectează-te pentru a accesa inteligența artificială</p>
+            
+            <input type="email" id="email" placeholder="Adresa de e-mail" required>
+            <input type="password" id="password" placeholder="Parola" required>
+            
+            <button id="login-btn" onclick="login()">Autentificare</button>
+            <p id="auth-error" class="error-msg"></p>
+        </div>
+    </div>
+
+   <!-- Containerul principal de Chat -->
+    <div id="chat-container" class="hidden">
+        
+        <!-- NOU: Sidebar-ul din stânga -->
+        <div class="sidebar">
+            <button onclick="createNewSession()" class="new-chat-btn">➕ Chat Nou</button>
+            <div id="sessions-list">
+                <!-- Aici vor apărea conversațiile -->
+            </div>
+            <button onclick="logout()" class="logout-btn">Ieșire Cont</button>
+        </div>
+
+        <!-- Zona principală de conversație -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="header-left">
+                    <h3>BIG AI 🤖</h3>
+                </div>
+                <div class="header-right">
+                    <select id="model-selector" class="model-dropdown">
+                        <option value="groq">Llama 3.3 (Groq)</option>
+                        <option value="gemini">Gemini 2.5 (Google)</option>
+                    </select>
+                    <div class="credits">
+    Credite: <span id="credit-count">---</span>
+    <!-- BUTON NOU: -->
+    <button onclick="buyCredits()" class="buy-btn" style="background-color: #6366f1; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 10px; font-weight: bold;">
+        💳 Cumpără Credite
+    </button>
+</div>
+                </div>
+            </div>
+            
+            <div id="chat-box"></div>
+            
+           <!-- Aceasta este zona din interiorul "chat-screen", sub "chat-box" -->
+<div class="chat-input-container">
+    <!-- 1. AM CORECTAT ID-UL AICI: message-input -->
+    <input type="text" id="message-input" placeholder="Scrie un mesaj către AI..." autocomplete="off">
+    
+    <!-- 2. AM CORECTAT ID-UL AICI: model-selector -->
+    <select id="model-selector" class="model-select">
+        <option value="groq">Groq (Llama 3)</option>
+        <option value="gemini">Gemini</option>
+    </select>
+<!-- Bifa pentru Quick Chat (Incognito) -->
+    <div style="display: flex; align-items: center; gap: 5px; color: white; font-size: 14px;">
+        <input type="checkbox" id="quick-chat-toggle">
+        <label for="quick-chat-toggle" title="Nu salvează în istoric">Incognito</label>
+    </div>
+    <button onclick="sendMessage()" class="send-btn">
+        <span>Trimite</span> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/></svg>
+    </button>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

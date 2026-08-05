@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app.db:/app/app.db
+      - ./chroma_data:/app/chroma_data
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "5500:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+  telegram-bot:
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - backend
+    restart: unless-stopped
