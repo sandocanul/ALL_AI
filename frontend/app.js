@@ -62,7 +62,8 @@ async function register() {
         const response = await fetch(`${API_URL}/api/auth/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: user, password: pass })
+            // AICI ESTE MODIFICAREA MAGICA: Am adăugat un email generat automat
+            body: JSON.stringify({ username: user, email: user + "@test.com", password: pass })
         });
 
         if (response.ok) {
