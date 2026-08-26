@@ -38,7 +38,7 @@ async function login() {
             alert("Logare reușită!");
             document.getElementById("auth-container").style.display = "none";
             document.getElementById("chat-container").style.display = "block";
-            loadModels();
+            //loadModels();
         } else {
             const errorData = await response.json();
             alert("Eroare la login: " + JSON.stringify(errorData));
