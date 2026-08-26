@@ -10,18 +10,22 @@
 </head>
 <body>
     <!-- Ecranul de Autentificare -->
-    <div id="auth-container" class="container">
-        <div class="auth-box">
-            <h2>Bine ai venit la BIG AI</h2>
-            <p>Conectează-te pentru a accesa inteligența artificială</p>
-            
-            <input type="email" id="email" placeholder="Adresa de e-mail" required>
-            <input type="password" id="password" placeholder="Parola" required>
-            
-            <button id="login-btn" onclick="login()">Autentificare</button>
-            <p id="auth-error" class="error-msg"></p>
-        </div>
+    <!-- Containerul pentru Autentificare -->
+<div id="auth-container" class="auth-box">
+    <h2>Bine ai venit!</h2>
+    
+    <input type="text" id="username" placeholder="Nume utilizator" required>
+    <input type="password" id="password" placeholder="Parolă" required>
+    
+    <!-- Am adăugat un container pentru butoane ca să stea frumos unul lângă altul -->
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="login()" style="flex: 1; background-color: #3b82f6; color: white;">Logare</button>
+        <button onclick="register()" style="flex: 1; background-color: #10b981; color: white;">Creare cont</button>
     </div>
+
+    <!-- Un paragraf unde vom afișa erorile (ex: "Parolă greșită") -->
+    <p id="auth-message" style="color: #ef4444; margin-top: 10px; font-size: 14px; text-align: center;"></p>
+</div>
 
    <!-- Containerul principal de Chat -->
     <div id="chat-container" class="hidden">
@@ -44,7 +48,7 @@
                 <div class="header-right">
                     <select id="model-selector" class="model-dropdown">
                         <option value="groq">Llama 3.3 (Groq)</option>
-                        <option value="gemini">Gemini 2.5 (Google)</option>
+                        <option value="gemini">Gemini 3.5 (Google)</option>
                     </select>
                     <div class="credits">
     Credite: <span id="credit-count">---</span>
