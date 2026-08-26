@@ -34,11 +34,22 @@ async function login() {
 
         if (response.ok) {
             const data = await response.json();
-            token = data.access_token;
-            alert("Logare reușită!");
-            document.getElementById("auth-container").style.display = "none";
-            document.getElementById("chat-container").style.display = "block";
-            //loadModels();
+            // 1. Salvăm token-ul în memoria browserului (ca să-l folosească loadChatHistory)
+            localStorage.setItem("access_token", data.access_token);
+            
+            // 2. Ascundem logarea și arătăm chat-ul (aici folosești ID-urile tale corecte)
+            document.getElementById("auth-container").style.display = "none"; 
+            // În loc de "block", încearcă să pui "flex"
+document.getElementById("chat-container").style.display = "flex";
+            
+            // 3. Pornim aplicația! (Aducem sesiunile vechi)
+            // Dacă ai o funcție care face asta, de obicei e loadSessions() sau showChat()
+            if (typeof loadSessions === "function") {
+                loadSessions(); 
+                console.log("Logare terminată complet! Chat-ul ar trebui să fie vizibil.");
+            } else if (typeof showChat === "function") {
+                showChat();
+            }
         } else {
             const errorData = await response.json();
             alert("Eroare la login: " + JSON.stringify(errorData));
