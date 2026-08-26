@@ -1,27 +1,20 @@
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-from app.config import get_settings
+# 1. Luăm link-ul bazei de date din setările Render. Dacă nu există, folosim SQLite local.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./database.db")
 
-settings = get_settings()
+# 2. Reparăm o mică problemă tehnică pe care o au unele platforme cu numele link-ului
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
+# 3. Creăm conexiunea (SQLite are nevoie de o setare specială, Postgres nu)
+if "sqlite" in DATABASE_URL:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
-engine = create_engine(settings.database_url, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db():
-    # importul e facut aici ca sa fie sigur ca toate modelele
-    # sunt inregistrate pe Base inainte de create_all
-    from app import models  # noqa: F401
-    Base.metadata.create_all(bind=engine)
