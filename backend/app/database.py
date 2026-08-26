@@ -18,3 +18,10 @@ else:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+# Funcția de care au nevoie routerele pentru a vorbi cu baza de date
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
