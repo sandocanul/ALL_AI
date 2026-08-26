@@ -48,7 +48,7 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
         if request.model == "groq":
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             response = client.chat.completions.create(
-                model="llama-3.1-70b-versatile", 
+                model="gemma2-9b-it", 
                 messages=[{"role": "user", "content": request.message}]
             )
             reply = response.choices[0].message.content
