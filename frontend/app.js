@@ -20,7 +20,8 @@ async function login() {
     try {
         // FastAPI OAuth2 cere ca datele să fie trimise ca x-www-form-urlencoded
         const formData = new URLSearchParams();
-        formData.append("username", user);
+        // AICI E SECRETUL: îi dăm email-ul fals în loc de simplul username!
+        formData.append("username", user + "@test.com"); 
         formData.append("password", pass);
 
         const response = await fetch(`${API_URL}/api/auth/login`, {
