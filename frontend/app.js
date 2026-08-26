@@ -38,9 +38,11 @@ async function login() {
             localStorage.setItem("access_token", data.access_token);
             
             // 2. Ascundem logarea și arătăm chat-ul (aici folosești ID-urile tale corecte)
-            document.getElementById("auth-container").style.display = "none"; 
-            // În loc de "block", încearcă să pui "flex"
-document.getElementById("chat-container").style.display = "flex";
+            // Adăugăm clasa ascunsă pe cutia de logare
+document.getElementById("auth-container").classList.add("hidden");
+
+// Scoatem clasa ascunsă de pe cutia de chat ca să se vadă
+document.getElementById("chat-container").classList.remove("hidden");
             
             // 3. Pornim aplicația! (Aducem sesiunile vechi)
             // Dacă ai o funcție care face asta, de obicei e loadSessions() sau showChat()
