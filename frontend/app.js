@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://all-ai-1-ndsb.onrender.com";
 
 // Verificăm dacă suntem deja logați
 window.onload = () => {
@@ -7,36 +7,75 @@ window.onload = () => {
     }
 };
 
-// Funcția de Login actualizată
+// Funcția pentru LOGARE (Intră în contul existent)
 async function login() {
-    // Aici preluăm valorile din input-uri (poate aveai id-urile "login-email" / "login-password", adaptează dacă e nevoie)
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const msg = document.getElementById("auth-message");
+
+    if (!user || !pass) {
+        msg.innerText = "Te rog introdu username-ul și parola.";
+        return;
+    }
 
     try {
+        // FastAPI folosește de obicei formatul URL Encoded pentru login (OAuth2)
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            // Backend-ul așteaptă URLSearchParams pentru OAuth2, nu JSON
-            body: new URLSearchParams({
-                "username": email,
-                "password": password
-            })
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ username: user, password: pass })
         });
 
         if (response.ok) {
             const data = await response.json();
-            // 1. Salvăm token-ul
             localStorage.setItem("access_token", data.access_token);
-            // 2. Trecem la ecranul de Chat
-            showChat(); 
+            msg.innerText = "Logare reușită!";
+            msg.style.color = "#10b981"; // Verde
+            
+            // Ascundem formularul și arătăm chat-ul
+            document.getElementById("auth-container").style.display = "none";
+            document.getElementById("chat-interface").style.display = "flex";
+            
+            // Încărcăm conversațiile
+            loadSessions();
         } else {
-            alert("⚠️ Date de conectare incorecte!");
+            msg.innerText = "Username sau parolă incorecte!";
+            msg.style.color = "#ef4444"; // Roșu
         }
     } catch (error) {
-        console.error("Eroare la login:", error);
+        msg.innerText = "Eroare de conexiune la server.";
+    }
+}
+
+// Funcția pentru ÎNREGISTRARE (Creează un cont nou)
+async function register() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const msg = document.getElementById("auth-message");
+
+    if (!user || !pass) {
+        msg.innerText = "Te rog introdu username-ul și parola pentru noul cont.";
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/api/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+
+        if (response.ok) {
+            msg.innerText = "Cont creat cu succes! Acum te poți loga.";
+            msg.style.color = "#10b981"; // Verde
+            // Opțional: îi completăm noi parola ca să dea doar click pe Logare
+        } else {
+            const data = await response.json();
+            msg.innerText = data.detail || "Acest nume de utilizator există deja.";
+            msg.style.color = "#ef4444"; // Roșu
+        }
+    } catch (error) {
+        msg.innerText = "Eroare de conexiune la server.";
     }
 }
 function logout() {
