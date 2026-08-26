@@ -11,39 +11,39 @@ window.onload = () => {
 async function login() {
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
-    const msg = document.getElementById("auth-message");
 
     if (!user || !pass) {
-        msg.innerText = "Te rog introdu username-ul și parola.";
+        alert("Introdu username și parola!");
         return;
     }
 
     try {
-        // FastAPI folosește de obicei formatul URL Encoded pentru login (OAuth2)
+        // FastAPI OAuth2 cere ca datele să fie trimise ca x-www-form-urlencoded
+        const formData = new URLSearchParams();
+        formData.append("username", user);
+        formData.append("password", pass);
+
         const response = await fetch(`${API_URL}/api/auth/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ username: user, password: pass })
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString()
         });
 
         if (response.ok) {
             const data = await response.json();
-            localStorage.setItem("access_token", data.access_token);
-            msg.innerText = "Logare reușită!";
-            msg.style.color = "#10b981"; // Verde
-            
-            // Ascundem formularul și arătăm chat-ul
-            document.getElementById("auth-container").style.display = "none";
-            document.getElementById("chat-interface").style.display = "flex";
-            
-            // Încărcăm conversațiile
-            loadSessions();
+            token = data.access_token;
+            alert("Logare reușită!");
+            document.getElementById("auth-section").style.display = "none";
+            document.getElementById("chat-section").style.display = "block";
+            loadModels();
         } else {
-            msg.innerText = "Username sau parolă incorecte!";
-            msg.style.color = "#ef4444"; // Roșu
+            const errorData = await response.json();
+            alert("Eroare la login: " + JSON.stringify(errorData));
         }
     } catch (error) {
-        msg.innerText = "Eroare de conexiune la server.";
+        console.error("Eroare la login:", error);
     }
 }
 
