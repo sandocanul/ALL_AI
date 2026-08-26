@@ -36,8 +36,8 @@ async function login() {
             const data = await response.json();
             token = data.access_token;
             alert("Logare reușită!");
-            document.getElementById("auth-section").style.display = "none";
-            document.getElementById("chat-section").style.display = "block";
+            document.getElementById("auth-container").style.display = "none";
+            document.getElementById("chat-container").style.display = "block";
             loadModels();
         } else {
             const errorData = await response.json();
