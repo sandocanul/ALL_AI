@@ -59,10 +59,10 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             response = model.generate_content(request.message)
             reply = response.text
 
-        elif request.model == "OpenAI GPT-OSS 120B":
+        elif request.model == "llama":
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             response = client.chat.completions.create(
-                model="Llama 3.3 70B", 
+                model="llama-3.3-70b-versatile", # Numele real și valid de pe Groq
                 messages=[{"role": "user", "content": request.message}]
             )
             reply = response.choices[0].message.content
