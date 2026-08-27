@@ -52,18 +52,28 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
                 messages=[{"role": "user", "content": request.message}]
             )
             reply = response.choices[0].message.content
+            
         elif request.model == "gemini":
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
             model = genai.GenerativeModel('gemini-3.5-flash')
             response = model.generate_content(request.message)
             reply = response.text
+
+        elif request.model == "OpenAI GPT-OSS 120B":
+            client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+            response = client.chat.completions.create(
+                model="Llama 3.3 70B", 
+                messages=[{"role": "user", "content": request.message}]
+            )
+            reply = response.choices[0].message.content
+            
         else:
             raise HTTPException(status_code=400, detail="Model necunoscut (sau Claude necesită reîncărcare)!")
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Eroare AI: {str(e)}")
 
     user_credits.balance -= 1
-
     # SALVĂM DOAR DACĂ NU ESTE QUICK CHAT
     if not request.is_quick_chat and request.session_id:
         user_msg_db = Message(user_id=current_user.id, session_id=request.session_id, sender="user", content=request.message)
