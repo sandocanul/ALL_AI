@@ -62,7 +62,7 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
         elif request.model == "llama":
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile", # Numele real și valid de pe Groq
+                model="llama-3.1-70b-versatile", # Numele real și valid de pe Groq
                 messages=[{"role": "user", "content": request.message}]
             )
             reply = response.choices[0].message.content
