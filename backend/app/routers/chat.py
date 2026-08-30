@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
-
+from openai import OpenAI
 from app.database import get_db
 from app.auth import get_current_active_user
 from app.models import User, Credit, Message, ChatSession
@@ -59,8 +59,15 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             response = model.generate_content(request.message)
             reply = response.text
 
-        elif request.model == "llama":
-            client = Groq(api_key=os.getenv("OPEN_ROUTER_KEY"))
+        elif request.model == "llama": # Păstrăm numele cum ai zis tu
+            # 1. Cream un client folosind librăria standard OpenAI
+            # 2. Îi dăm cheia ta
+            # 3. CRUCIAL: Îi schimbăm adresa URL către OpenRouter
+            client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("OPEN_ROUTER_KEY"),
+            )
+            
             response = client.chat.completions.create(
                 model="inclusionai/ling-3.0-flash-fin:free",
                 messages=[{"role": "user", "content": request.message}]
