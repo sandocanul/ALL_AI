@@ -60,9 +60,9 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             reply = response.text
 
         elif request.model == "llama":
-            client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+            client = Groq(api_key=os.getenv("OPEN_ROUTER_KEY"))
             response = client.chat.completions.create(
-                model="openai/gpt-4o",
+                model="openai/gpt-4o-mini",
                 messages=[{"role": "user", "content": request.message}]
             )
             reply = response.choices[0].message.content
