@@ -279,7 +279,13 @@ function appendMessage(text, sender) {
     const chatBox = document.getElementById("chat-box");
     const div = document.createElement("div");
     div.classList.add("message", `${sender}-message`);
-
+    if (sender === "user") {
+    // Mesajele tale rămân text normal ca să nu existe probleme de formatare
+    div.innerText = text;
+} else {
+    // Mesajele AI-ului trec prin 'marked' ca să fie formatate frumos
+    div.innerHTML = marked.parse(text);
+}
     const textDiv = document.createElement("div");
     textDiv.classList.add("text");
 

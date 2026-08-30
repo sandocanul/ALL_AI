@@ -291,3 +291,27 @@ body { background-color: #121212; color: #ffffff; height: 100vh; overflow: hidde
     opacity: 1;
     transform: scale(1.1); /* Se măresc puțin la hover */
 }
+/* --- FORMATARE MARKDOWN PENTRU AI --- */
+.ai-message p { margin: 0 0 10px 0; }
+.ai-message ul, .ai-message ol { margin: 0 0 10px 20px; }
+.ai-message pre {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: monospace;
+    margin: 10px 0;
+}
+.ai-message code {
+    background-color: rgba(0,0,0,0.1);
+    color: #eb5757;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+.ai-message pre code {
+    background-color: transparent; /* Codul din blocuri mari sa nu aiba fundal dublu */
+    color: inherit;
+    padding: 0;
+}
