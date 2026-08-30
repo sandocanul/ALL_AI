@@ -10,7 +10,10 @@ from app.models import User, Credit, Message, ChatSession
 
 from groq import Groq
 import google.generativeai as genai
-
+# Asta va ghida comportamentul AI-ului pentru toți utilizatorii
+SYSTEM_PROMPT = """Ești BIG AI, un asistent virtual extrem de inteligent, creativ și direct. 
+Rolul tău este să oferi răspunsuri clare, bine formatate (folosind Markdown, liste, bold) și adaptate la contextul utilizatorului. 
+Nu folosi introduceri lungi sau robotice. Fii un partener de brainstorming util, capabil să scrie cod, să planifice antrenamente, să dea idei de conținut sau să rezolve probleme logice."""
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
 # 1. ACTUALIZAT: Schema adaugă session_id și opțiunea de Quick Chat
@@ -49,33 +52,39 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             response = client.chat.completions.create(
                 model="qwen/qwen3.6-27b", 
-                messages=[{"role": "user", "content": request.message}]
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": request.message}
+                ]
             )
             reply = response.choices[0].message.content
             
         elif request.model == "gemini":
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            model = genai.GenerativeModel('gemini-3.5-flash')
+            # Gemini folosește parametrul "system_instruction"
+            model = genai.GenerativeModel(
+                'gemini-3.5-flash',
+                system_instruction=SYSTEM_PROMPT
+            )
             response = model.generate_content(request.message)
             reply = response.text
 
-        elif request.model == "llama": # Păstrăm numele cum ai zis tu
-            # 1. Cream un client folosind librăria standard OpenAI
-            # 2. Îi dăm cheia ta
-            # 3. CRUCIAL: Îi schimbăm adresa URL către OpenRouter
+        elif request.model == "llama":
             client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=os.getenv("OPEN_ROUTER_KEY"),
             )
-            
             response = client.chat.completions.create(
                 model="inclusionai/ling-3.0-flash-fin:free",
-                messages=[{"role": "user", "content": request.message}]
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": request.message}
+                ]
             )
             reply = response.choices[0].message.content
             
         else:
-            raise HTTPException(status_code=400, detail="Model necunoscut (sau Claude necesită reîncărcare)!")
+            raise HTTPException(status_code=400, detail="Model necunoscut!")
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Eroare AI: {str(e)}")
