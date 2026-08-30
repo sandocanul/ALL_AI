@@ -277,18 +277,16 @@ async function sendMessage() {
 }
 function appendMessage(text, sender) {
     const chatBox = document.getElementById("chat-box");
+    
+    // Cream bula principală a mesajului
     const div = document.createElement("div");
     div.classList.add("message", `${sender}-message`);
-    if (sender === "user") {
-    // Mesajele tale rămân text normal ca să nu existe probleme de formatare
-    div.innerText = text;
-} else {
-    // Mesajele AI-ului trec prin 'marked' ca să fie formatate frumos
-    div.innerHTML = marked.parse(text);
-}
+    
+    // Cream zona efectivă de text din interiorul bulei
     const textDiv = document.createElement("div");
     textDiv.classList.add("text");
 
+    // Aici aplicăm regula pentru formatare
     if (sender === "ai") {
         // AI-ul primește formatare Markdown (titluri, bold, liste, cod)
         textDiv.innerHTML = marked.parse(text);
@@ -297,9 +295,12 @@ function appendMessage(text, sender) {
         textDiv.textContent = text;
     }
 
+    // Punem textul în bulă, și bula pe ecran
     div.appendChild(textDiv);
     chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight; // Autoscroll jos
+    
+    // Autoscroll în jos
+    chatBox.scrollTop = chatBox.scrollHeight; 
 }
 // 1. Funcția care cere link-ul de la Stripe și te trimite acolo
 async function buyCredits() {
