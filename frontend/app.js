@@ -1,5 +1,5 @@
 const API_URL = "https://all-ai-1-ndsb.onrender.com";
-
+let currentChatHistory = []; // Aici ținem minte mesajele din conversația curentă
 // Verificăm dacă suntem deja logați
 window.onload = () => {
     if (localStorage.getItem("access_token")) {
@@ -193,6 +193,7 @@ async function loadSessions() {
 
 // 2. Creează o conversație nouă
 async function createNewSession() {
+    currentChatHistory = [];
     const token = localStorage.getItem("access_token");
     const response = await fetch(`${API_URL}/api/chat/sessions`, {
         method: "POST",
@@ -227,7 +228,6 @@ async function loadChatHistory(sessionId) {
     }
 }
 
-// 4. Modifică sendMessage pentru a trimite session_id și Quick Chat status
 async function sendMessage() {
     const input = document.getElementById("message-input");
     const message = input.value.trim();
@@ -236,9 +236,17 @@ async function sendMessage() {
     appendMessage(message, "user");
     input.value = "";
 
+    // 1. Adăugăm mesajul tău în istoricul conversației
+    currentChatHistory.push({ role: "user", content: message });
+
+    // 2. Tăiem istoricul dacă e prea lung (păstrăm ultimele 10 mesaje = 5 întrebări și 5 răspunsuri)
+    if (currentChatHistory.length > 10) {
+        currentChatHistory = currentChatHistory.slice(currentChatHistory.length - 10);
+    }
+
     const token = localStorage.getItem("access_token");
     const selectedModel = document.getElementById("model-selector").value;
-    const isQuickChat = document.getElementById("quick-chat-toggle").checked; // Citește bifa
+    const isQuickChat = document.getElementById("quick-chat-toggle").checked;
 
     try {
         const response = await fetch(`${API_URL}/api/chat/`, {
@@ -251,7 +259,8 @@ async function sendMessage() {
                 message: message,
                 model: selectedModel,
                 session_id: currentSessionId,
-                is_quick_chat: isQuickChat // Trimite statusul de incognito
+                is_quick_chat: isQuickChat,
+                history: currentChatHistory // <--- AICI ESTE SECRETUL: trimitem toată lista!
             })
         });
 
@@ -260,21 +269,31 @@ async function sendMessage() {
 
         if (!response.ok) {
             appendMessage(`⚠️ Eroare: ${data.detail}`, "ai");
+            // Dacă dă eroare, scoatem ultimul tău mesaj din istoric ca să nu încurcăm AI-ul
+            currentChatHistory.pop();
             return;
         }
 
         appendMessage(data.response, "ai");
+        
+        // 3. Adăugăm și răspunsul AI-ului în istoric ca să știe ce ți-a răspuns
+        currentChatHistory.push({ role: "assistant", content: data.response });
+
         document.getElementById("credit-count").innerText = data.remaining_credits;
 
-        // Dacă nu e Quick Chat, dăm refresh la Sidebar ca să se actualizeze titlul
         if (!isQuickChat) {
             loadSessions();
         }
 
     } catch (error) {
         appendMessage("⚠️ Eroare de conectare.", "ai");
+        currentChatHistory.pop(); // Scoatem mesajul pe care am încercat să-l trimitem, dar a picat
     }
 }
+
+// CA SĂ FIE TOTUL BINE: La funcția ta "createNewSession()" (dacă ai),
+// adaugă linia: currentChatHistory = []; ca să se șteargă memoria când începi un chat nou.
+
 function appendMessage(text, sender) {
     const chatBox = document.getElementById("chat-box");
     

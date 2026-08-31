@@ -2,7 +2,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from openai import OpenAI
 from app.database import get_db
 from app.auth import get_current_active_user
@@ -16,13 +16,13 @@ Rolul tău este să oferi răspunsuri clare, bine formatate (folosind Markdown, 
 Nu folosi introduceri lungi sau robotice. Fii un partener de brainstorming util, capabil să scrie cod, să planifice antrenamente, să dea idei de conținut sau să rezolve probleme logice."""
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
-# 1. ACTUALIZAT: Schema adaugă session_id și opțiunea de Quick Chat
 class ChatRequest(BaseModel):
     message: str
     model: str = "groq"
     use_rag: bool = False
     session_id: Optional[int] = None
     is_quick_chat: bool = False
+    history: Optional[List[Dict[str, Any]]] = [] # NOU: Primim o listă de dicționare din frontend
 
 # 2. RUTA NOUĂ: Creează o sesiune nouă de chat
 @router.post("/sessions")
@@ -48,25 +48,45 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
 
     reply = ""
     try:
+        # Așa "lipim" totul logic pentru AI:
+        # 1. System Prompt-ul
+        messages_for_ai = [{"role": "system", "content": SYSTEM_PROMPT}]
+        
+        # 2. Toată lista cu istoricul pe care am primit-o din frontend (ultimele 10 mesaje)
+        if request.history:
+            for past_message in request.history:
+                # Ne asigurăm că adăugăm doar mesajele vechi (fără cel proaspăt, ca să nu-l dublăm)
+                if past_message.get("content") != request.message:
+                    messages_for_ai.append(past_message)
+        
+        # 3. Mesajul nou de la utilizator
+        messages_for_ai.append({"role": "user", "content": request.message})
+
         if request.model == "groq":
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             response = client.chat.completions.create(
-                model="qwen/qwen3.6-27b", 
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": request.message}
-                ]
+                model="qwen/qwen3.6-27b",
+                messages=messages_for_ai # În loc de lista manuală, punem lista construită mai sus!
             )
             reply = response.choices[0].message.content
             
         elif request.model == "gemini":
             genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-            # Gemini folosește parametrul "system_instruction"
             model = genai.GenerativeModel(
                 'gemini-3.5-flash',
                 system_instruction=SYSTEM_PROMPT
             )
-            response = model.generate_content(request.message)
+            # La Gemini trebuie să-i convertim lista în formatul lui
+            gemini_history = []
+            if request.history:
+                 for msg in request.history:
+                     # Gemini folosește "model" în loc de "assistant" și "user"
+                     role = "model" if msg["role"] == "assistant" else "user"
+                     if msg.get("content") != request.message:
+                        gemini_history.append({"role": role, "parts": [msg["content"]]})
+            
+            chat = model.start_chat(history=gemini_history)
+            response = chat.send_message(request.message)
             reply = response.text
 
         elif request.model == "llama":
@@ -76,10 +96,7 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             )
             response = client.chat.completions.create(
                 model="inclusionai/ling-3.0-flash-fin:free",
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": request.message}
-                ]
+                messages=messages_for_ai # La fel ca la Groq
             )
             reply = response.choices[0].message.content
             
@@ -88,7 +105,6 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Eroare AI: {str(e)}")
-
     user_credits.balance -= 1
     # SALVĂM DOAR DACĂ NU ESTE QUICK CHAT
     if not request.is_quick_chat and request.session_id:
