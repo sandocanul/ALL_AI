@@ -7,7 +7,7 @@ from openai import OpenAI
 from app.database import get_db
 from app.auth import get_current_active_user
 from app.models import User, Credit, Message, ChatSession
-
+from app.routers.auth import get_current_user
 from groq import Groq
 import google.generativeai as genai
 # Asta va ghida comportamentul AI-ului pentru toți utilizatorii
@@ -41,7 +41,7 @@ def get_chat_sessions(current_user: User = Depends(get_current_active_user), db:
 
 # 4. RUTA ACTUALIZATĂ: Trimite mesaj și procesează Quick Chat
 @router.post("/")
-def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+async def chat(request: ChatRequest, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     user_credits = db.query(Credit).filter(Credit.user_id == current_user.id).first()
     if not user_credits or user_credits.balance < 1:
         raise HTTPException(status_code=402, detail="Nu ai suficiente credite!")
@@ -102,7 +102,37 @@ def chat_with_ai(request: ChatRequest, current_user: User = Depends(get_current_
             
         else:
             raise HTTPException(status_code=400, detail="Model necunoscut!")
+            # --- PARTEA NOUĂ DE SALVARE ÎN BAZA DE DATE ---
+        session_id_to_use = request.session_id
+
+        # Dacă NU e Quick Chat, salvăm în baza de date
+        if not request.is_quick_chat:
+            if not session_id_to_use:
+                # 1. Dacă nu avem o sesiune, creăm una nouă
+                # Titlul va fi primele 30 de litere din mesajul tău
+                titlu_sesiune = request.message[:30] + "..." if len(request.message) > 30 else request.message
+                new_session = ChatSession(user_id=current_user.id, title=titlu_sesiune)
+                db.add(new_session)
+                db.commit()
+                db.refresh(new_session)
+                session_id_to_use = new_session.id
             
+            # 2. Salvăm mesajul tău
+            user_msg = Message(user_id=current_user.id, session_id=session_id_to_use, sender="user", content=request.message)
+            db.add(user_msg)
+            
+            # 3. Salvăm răspunsul AI-ului
+            ai_msg = Message(user_id=current_user.id, session_id=session_id_to_use, sender="ai", content=reply)
+            db.add(ai_msg)
+            
+            db.commit()
+            
+        # Returnăm răspunsul, dar trimitem și ID-ul sesiunii înapoi la Frontend
+        return {
+            "response": reply, 
+            "remaining_credits": 999, # Sau cum ai tu logica de credite aici
+            "session_id": session_id_to_use # IMPORTANT: Frontend-ul are nevoie de el!
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Eroare AI: {str(e)}")
     user_credits.balance -= 1
@@ -168,3 +198,19 @@ def delete_session(session_id: int, current_user: User = Depends(get_current_act
     db.delete(session)
     db.commit()
     return {"status": "success", "message": "Sesiune ștearsă"}
+# --- RUTE NOI PENTRU SALVAREA ȘI ÎNCĂRCAREA ISTORICULUI ---
+
+@router.get("/sessions")
+async def get_sessions(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    # Aducem toate conversațiile utilizatorului, ordonate de la cea mai nouă
+    sessions = db.query(ChatSession).filter(ChatSession.user_id == current_user.id).order_by(ChatSession.timestamp.desc()).all()
+    return sessions
+
+@router.get("/session/{session_id}")
+async def get_session_history(session_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    # Aducem toate mesajele dintr-o conversație anume
+    messages = db.query(Message).filter(
+        Message.session_id == session_id, 
+        Message.user_id == current_user.id
+    ).order_by(Message.id.asc()).all()
+    return messages
