@@ -39,6 +39,7 @@ async function login() {
             
             // 2. Ascundem logarea și arătăm chat-ul (aici folosești ID-urile tale corecte)
             // Adăugăm clasa ascunsă pe cutia de logare
+            loadSessions();
 document.getElementById("auth-container").classList.add("hidden");
 
 // Scoatem clasa ascunsă de pe cutia de chat ca să se vadă
@@ -451,3 +452,87 @@ async function deleteChat(sessionId) {
         console.error("Eroare la ștergere:", error);
     }
 }
+// --- FUNCȚII PENTRU SESIUNILE DE CHAT ---
+
+// 1. Încarcă lista de sesiuni în bara din stânga
+async function loadSessions() {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_URL}/api/chat/sessions`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        
+        if (!response.ok) return;
+        
+        const sessions = await response.json();
+        const sessionsList = document.getElementById("sessions-list");
+        sessionsList.innerHTML = ""; // Curățăm lista existentă
+
+        // Creăm un buton pentru fiecare sesiune găsită în baza de date
+        sessions.forEach(session => {
+            const btn = document.createElement("button");
+            btn.classList.add("session-btn");
+            // Afișăm un titlu scurt
+            btn.innerText = `💬 ${session.title}`;
+            
+            // Când apeși pe el, încarcă mesajele din sesiunea respectivă
+            btn.onclick = () => loadSessionHistory(session.id);
+            
+            sessionsList.appendChild(btn);
+        });
+    } catch (error) {
+        console.error("Eroare la încărcarea sesiunilor:", error);
+    }
+}
+
+// 2. Încarcă mesajele unei sesiuni vechi pe ecran
+async function loadSessionHistory(sessionId) {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+        const response = await fetch(`${API_URL}/api/chat/session/${sessionId}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) return;
+
+        const messages = await response.json();
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = ""; // Curățăm ecranul actual
+        currentChatHistory = []; // Golește și memoria curentă
+
+        // Pentru fiecare mesaj din baza de date, îl punem pe ecran și în memoria curentă
+        messages.forEach(msg => {
+            // "msg.sender" vine din baza de date ("user" sau "ai")
+            appendMessage(msg.content, msg.sender);
+            
+            // Reconstruim memoria (Sliding Window) ca AI-ul să poată continua de unde a rămas
+            const roleForHistory = msg.sender === "user" ? "user" : "assistant";
+            currentChatHistory.push({ role: roleForHistory, content: msg.content });
+        });
+
+        // Tăiem memoria la ultimele 10 dacă cumva sesiunea era foarte lungă
+        if (currentChatHistory.length > 10) {
+            currentChatHistory = currentChatHistory.slice(currentChatHistory.length - 10);
+        }
+
+        // Setăm sesiunea curentă ca să știe backend-ul unde să salveze noile mesaje
+        currentSessionId = sessionId; 
+
+    } catch (error) {
+        console.error("Eroare la încărcarea istoricului:", error);
+    }
+}
+
+// 3. Butonul "Chat Nou" din stânga sus
+function createNewSession() {
+    currentSessionId = null; // Backend-ul va crea un ID nou când trimiți primul mesaj
+    currentChatHistory = []; // AI-ul capătă "amnezie"
+    document.getElementById("chat-box").innerHTML = ""; // Curățăm ecranul
+}
+
+// Apelăm loadSessions() de fiecare dată când utilizatorul se loghează sau când se încarcă pagina
+// (Adaugă `loadSessions()` în funcția ta de login, după ce salvezi token-ul!)

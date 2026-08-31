@@ -315,3 +315,23 @@ body { background-color: #121212; color: #ffffff; height: 100vh; overflow: hidde
     color: inherit;
     padding: 0;
 }
+.session-btn {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    transition: 0.2s;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Pune "..." dacă titlul e prea lung */
+}
+
+.session-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
