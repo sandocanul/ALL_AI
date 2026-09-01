@@ -455,13 +455,6 @@ async function deleteChat(sessionId) {
 // --- FUNCȚII PENTRU SESIUNILE DE CHAT ---
 
 
-// 3. Butonul "Chat Nou" din stânga sus
-function createNewSession() {
-    currentSessionId = null; // Backend-ul va crea un ID nou când trimiți primul mesaj
-    currentChatHistory = []; // AI-ul capătă "amnezie"
-    document.getElementById("chat-box").innerHTML = ""; // Curățăm ecranul
-}
-
 // Apelăm loadSessions() de fiecare dată când utilizatorul se loghează sau când se încarcă pagina
 // (Adaugă `loadSessions()` în funcția ta de login, după ce salvezi token-ul!)
 // Când se încarcă pagina, dacă avem token de logare, încărcăm direct sesiunile
