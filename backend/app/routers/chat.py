@@ -137,22 +137,31 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
         raise HTTPException(status_code=500, detail=f"Eroare AI: {str(e)}")
     user_credits.balance -= 1
     # SALVĂM DOAR DACĂ NU ESTE QUICK CHAT
-    if not request.is_quick_chat and request.session_id:
-        user_msg_db = Message(user_id=current_user.id, session_id=request.session_id, sender="user", content=request.message)
-        ai_msg_db = Message(user_id=current_user.id, session_id=request.session_id, sender="ai", content=reply)
-        db.add(user_msg_db)
-        db.add(ai_msg_db)
-        
-        # Actualizăm titlul sesiunii dacă e primul mesaj
-        session = db.query(ChatSession).filter(ChatSession.id == request.session_id).first()
-        if session and session.title == "Conversație nouă":
-            session.title = request.message[:30] + "..." # Primele 30 caractere din mesaj devin titlul
+    session_id_to_use = request.session_id
 
-    db.commit()
-
+    if not request.is_quick_chat:
+            # 1. Dacă nu avem sesiune (e primul mesaj după ce ai apăsat + Chat Nou)
+            if not session_id_to_use:
+                # Creăm titlul direct din mesaj. Punem "..." DOAR dacă depășește 30 de litere
+                titlu = request.message[:30] + ("..." if len(request.message) > 30 else "")
+                
+                noua_sesiune = ChatSession(user_id=current_user.id, title=titlu)
+                db.add(noua_sesiune)
+                db.commit()
+                db.refresh(noua_sesiune)
+                session_id_to_use = noua_sesiune.id
+            
+            # 2. Acum salvăm mesajele sub ID-ul corect (fie cel nou, fie cel vechi)
+            user_msg_db = Message(user_id=current_user.id, session_id=session_id_to_use, sender="user", content=request.message)
+            ai_msg_db = Message(user_id=current_user.id, session_id=session_id_to_use, sender="ai", content=reply)
+            
+            db.add(user_msg_db)
+            db.add(ai_msg_db)
+            db.commit()
     return {
         "response": reply,
-        "remaining_credits": user_credits.balance
+        "remaining_credits": user_credits.balance,
+        "session_id": session_id_to_use
     }
 
 # 5. RUTA ACTUALIZATĂ: Aduce istoricul DOAR pentru o anumită sesiune
