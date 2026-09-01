@@ -536,3 +536,10 @@ function createNewSession() {
 
 // Apelăm loadSessions() de fiecare dată când utilizatorul se loghează sau când se încarcă pagina
 // (Adaugă `loadSessions()` în funcția ta de login, după ce salvezi token-ul!)
+// Când se încarcă pagina, dacă avem token de logare, încărcăm direct sesiunile
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+        loadSessions();
+    }
+});
