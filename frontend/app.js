@@ -218,6 +218,10 @@ async function loadSessionHistory(sessionId) {
     } catch (error) {
         console.error("Eroare la încărcarea istoricului:", error);
     }
+    // Dacă suntem pe telefon, închidem meniul automat după ce alegem o conversație
+        if (window.innerWidth <= 768) {
+            document.querySelector('.sidebar').classList.remove('active');
+        }
 }
 
 // --- TRIMITEREA MESAJELOR ---
@@ -427,4 +431,8 @@ async function deleteChat(sessionId) {
     } catch (error) {
         console.error("Eroare la ștergere:", error);
     }
+}// Funcția care deschide/închide meniul pe telefon
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar'); // folosește clasa barei tale din stânga
+    sidebar.classList.toggle('active');
 }
