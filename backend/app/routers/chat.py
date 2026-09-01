@@ -1,4 +1,5 @@
 import os
+import re
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -99,12 +100,18 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
                 messages=messages_for_ai # La fel ca la Groq
             )
             reply = response.choices[0].message.content
+           
             
         else:
-            raise HTTPException(status_code=400, detail="Model necunoscut!")
+         raise HTTPException(status_code=400, detail="Model necunoscut!")
             # --- PARTEA NOUĂ DE SALVARE ÎN BAZA DE DATE ---
         session_id_to_use = request.session_id
-
+ # --- LINIA NOUĂ DE CURĂȚARE ---
+        # Ștergem tag-urile <think> și tot ce e în interiorul lor
+        reply = re.sub(r'<think>.*?</think>', '', reply, flags=re.DOTALL).strip()
+        
+        # (Urmează codul pe care l-am făcut mai devreme cu salvarea în DB)
+        session_id_to_use = request.session_id
         # Dacă NU e Quick Chat, salvăm în baza de date
         if not request.is_quick_chat:
             if not session_id_to_use:
