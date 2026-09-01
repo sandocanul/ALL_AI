@@ -56,7 +56,15 @@ async function login() {
         console.error("Eroare la login:", error);
     }
 }
-
+// Așa trebuie să arate funcția corectă: pur și simplu golește ecranul!
+function createNewSession() {
+    currentSessionId = null; // Îi spunem că nu mai suntem în niciun chat vechi
+    currentChatHistory = []; // AI-ul primește amnezie
+    document.getElementById("chat-box").innerHTML = ""; // Curățăm ecranul
+    
+    // ATÂT! Nu trimitem nicio cerere la server aici. 
+    // Serverul va crea sesiunea abia când trimiți primul mesaj.
+}
 // Funcția pentru ÎNREGISTRARE (Creează un cont nou)
 async function register() {
     const user = document.getElementById("username").value;
