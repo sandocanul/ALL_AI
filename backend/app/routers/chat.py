@@ -7,7 +7,7 @@ from openai import OpenAI
 from app.database import get_db
 from app.auth import get_current_active_user
 from app.models import User, Credit, Message, ChatSession
-from app.routers.auth import get_current_user
+from app.auth import get_current_user
 from groq import Groq
 import google.generativeai as genai
 # Asta va ghida comportamentul AI-ului pentru toți utilizatorii
