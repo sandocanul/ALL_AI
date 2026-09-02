@@ -68,6 +68,7 @@
 <div class="chat-input-container">
     <!-- 1. AM CORECTAT ID-UL AICI: message-input -->
     <input type="text" id="message-input" placeholder="Scrie un mesaj către AI..." autocomplete="off">
+    <button id="image-quick-btn" title="Generează Imagine" onclick="insertImageCommand()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🎨</button>
     
     
 <!-- Bifa pentru Quick Chat (Incognito) -->
@@ -75,7 +76,6 @@
         <input type="checkbox" id="quick-chat-toggle">
         <label for="quick-chat-toggle" title="Nu salvează în istoric">Incognito</label>
     </div>
-    <button id="image-quick-btn" title="Generează Imagine" onclick="insertImageCommand()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🎨</button>
     
     <button onclick="sendMessage()" class="send-btn">
         <span>Trimite</span> 
