@@ -436,3 +436,9 @@ function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar'); // folosește clasa barei tale din stânga
     sidebar.classList.toggle('active');
 }
+// Funcție pentru butonul de generare imagine
+function insertImageCommand() {
+    const input = document.getElementById("message-input");
+    input.value = "/image un thumbnail de YouTube cu ";
+    input.focus(); // Îți pune cursorul direct acolo ca să continui ideea
+}

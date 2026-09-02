@@ -387,3 +387,16 @@ body { background-color: #121212; color: #ffffff; height: 100vh; overflow: hidde
         font-size: 14px;
     }
 }
+/* --- STILIZARE IMAGINI GENERATE ÎN CHAT --- */
+.ai-message .text img {
+    max-width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.4); /* O mică umbră pentru efect 3D */
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.ai-message .text img:hover {
+    transform: scale(1.02); /* Se mărește puțin când pui mouse-ul pe ea */
+}
