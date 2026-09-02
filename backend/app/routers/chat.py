@@ -93,17 +93,38 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
     user_text = request.message.strip()
 
     try:
-        # 1. VERIFICĂM DACĂ ESTE COMANDĂ DE GENERARE IMAGINE
+       # 1. VERIFICĂM DACĂ ESTE COMANDĂ DE GENERARE IMAGINE
         if user_text.lower().startswith("/image"):
-            image_prompt = user_text[6:].strip()
+            raw_prompt = user_text[6:].strip()
             
-            if not image_prompt:
+            if not raw_prompt:
                 reply = "Te rog să scrii ce vrei să generez. Exemplu: `/image un thumbnail cu un peisaj cibernetic`"
             else:
-                encoded_prompt = urllib.parse.quote(image_prompt)
+                # --- MAGIA NOUĂ: AI-ul TRADUCE ȘI OPTIMIZEAZĂ PROMPTUL ---
+                client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+                instruction = (
+                    "Translate the following image generation prompt to English and enhance it to be "
+                    "highly detailed, cinematic, and photorealistic for an AI image generator (like Flux/Midjourney). "
+                    "Return ONLY the English prompt, absolutely no introductory text, no quotes, no explanations.\n\n"
+                    f"User prompt: {raw_prompt}"
+                )
+                
+                enhancement_response = client.chat.completions.create(
+                    model="qwen/qwen3.6-27b", # Folosim modelul rapid pentru asta
+                    messages=[{"role": "user", "content": instruction}]
+                )
+                
+                # Curățăm rezultatul (scoatem <think> dacă există)
+                enhanced_prompt_english = enhancement_response.choices[0].message.content.strip()
+                enhanced_prompt_english = re.sub(r'<think>.*?</think>', '', enhanced_prompt_english, flags=re.DOTALL).strip()
+                
+                # --- GENERĂM IMAGINEA CU PROMPTUL SUPER-OPTIMIZAT ---
+                encoded_prompt = urllib.parse.quote(enhanced_prompt_english)
                 seed = random.randint(1, 1000000)
                 image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1280&height=720&model=flux&nologo=true&seed={seed}"
-                reply = f"Iată conceptul tău vizual:\n\n![Thumbnail Generat]({image_url})"
+                
+                # Returnăm imaginea + afișăm și promptul în engleză ca să vezi ce a generat!
+                reply = f"Iată conceptul vizual:\n\n![Thumbnail Generat]({image_url})\n\n*🪄 Prompt optimizat:* `{enhanced_prompt_english}`"
         
         # 2. DACĂ NU E IMAGINE, FOLOSIM INTELIGENȚA ARTIFICIALĂ
         else:
