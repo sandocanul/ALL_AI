@@ -24,7 +24,7 @@ async def add_no_cache_headers(request: Request, call_next):
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")
