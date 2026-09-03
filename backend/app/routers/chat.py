@@ -27,6 +27,7 @@ class ChatRequest(BaseModel):
     session_id: Optional[int] = None
     is_quick_chat: bool = False
     history: Optional[List[Dict[str, Any]]] = []
+    file_text: Optional[str] = None # <-- LINIA NOUĂ
 
 class SessionRename(BaseModel):
     title: str
@@ -127,13 +128,21 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
                 reply = f"Iată conceptul vizual:\n\n![Thumbnail Generat]({image_url})\n\n*🪄 Prompt optimizat:* `{enhanced_prompt_english}`"
         
         # 2. DACĂ NU E IMAGINE, FOLOSIM INTELIGENȚA ARTIFICIALĂ
+        # 2. DACĂ NU E IMAGINE, FOLOSIM INTELIGENȚA ARTIFICIALĂ
         else:
             messages_for_ai = [{"role": "system", "content": SYSTEM_PROMPT}]
             if request.history:
                 for past_message in request.history:
                     if past_message.get("content") != request.message:
                         messages_for_ai.append(past_message)
-            messages_for_ai.append({"role": "user", "content": request.message})
+            
+            # --- MAGIA NOUĂ PENTRU FIȘIERE ---
+            # Dacă am primit un fișier, îl combinăm cu mesajul tău pe ascuns
+            final_prompt = request.message
+            if request.file_text:
+                final_prompt = f"Ai primit următorul document atașat:\n\n{request.file_text}\n\nÎntrebarea utilizatorului: {request.message}"
+
+            messages_for_ai.append({"role": "user", "content": final_prompt})
 
             if request.model == "groq":
                 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
@@ -155,7 +164,8 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
                             gemini_history.append({"role": role, "parts": [msg["content"]]})
                 
                 chat_session = model.start_chat(history=gemini_history)
-                response = chat_session.send_message(request.message)
+                # Trimitem final_prompt-ul cu tot cu fișier la Gemini
+                response = chat_session.send_message(final_prompt)
                 reply = response.text
 
             elif request.model == "llama":
@@ -169,7 +179,7 @@ async def chat(request: ChatRequest, current_user=Depends(get_current_user), db:
             else:
                 raise HTTPException(status_code=400, detail="Model necunoscut!")
 
-            # Curățăm gândurile modelelor (tag-urile <think>)
+            # Curățăm gândurile modelelor
             reply = re.sub(r'<think>.*?</think>', '', reply, flags=re.DOTALL).strip()
 
         # --- SALVARE ÎN BAZA DE DATE ---

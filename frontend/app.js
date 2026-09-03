@@ -1,5 +1,6 @@
 const API_URL = "https://all-ai-1-ndsb.onrender.com";
 let currentChatHistory = []; // Aici ținem minte mesajele din conversația curentă
+let attachedFileName = "";
 let currentSessionId = null; // Ține minte în ce chat suntem
 
 // Verificăm dacă suntem deja logați
@@ -245,6 +246,7 @@ async function sendMessage() {
     const isQuickChat = document.getElementById("quick-chat-toggle").checked;
 
     try {
+        // În interiorul funcției sendMessage(), unde e fetch-ul:
         const response = await fetch(`${API_URL}/api/chat/`, {
             method: "POST",
             headers: {
@@ -256,9 +258,13 @@ async function sendMessage() {
                 model: selectedModel,
                 session_id: currentSessionId,
                 is_quick_chat: isQuickChat,
-                history: currentChatHistory 
+                history: currentChatHistory,
+                file_text: attachedFileText // <--- TRIMITEM FIȘIERUL AICI
             })
         });
+
+        // Imediat după ce am trimis mesajul spre server, curățăm fișierul de pe ecran ca să nu se trimită de 2 ori
+        removeFile();
 
         if (response.status === 401) return logout();
         const data = await response.json();
@@ -441,4 +447,28 @@ function insertImageCommand() {
     const input = document.getElementById("message-input");
     input.value = "/image un thumbnail de YouTube cu ";
     input.focus(); // Îți pune cursorul direct acolo ca să continui ideea
+}
+// Citește fișierul când îl selectezi
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    attachedFileName = file.name;
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        attachedFileText = e.target.result; // Salvăm textul din fișier în memorie
+        document.getElementById("file-name").innerText = "📄 " + attachedFileName;
+        document.getElementById("file-preview").style.display = "inline-block";
+    };
+    
+    reader.readAsText(file);
+}
+
+// Șterge fișierul dacă te răzgândești
+function removeFile() {
+    attachedFileText = null;
+    attachedFileName = "";
+    document.getElementById("file-upload").value = "";
+    document.getElementById("file-preview").style.display = "none";
 }

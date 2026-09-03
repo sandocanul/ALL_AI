@@ -65,22 +65,22 @@
             <div id="chat-box"></div>
             
            <!-- Aceasta este zona din interiorul "chat-screen", sub "chat-box" -->
-<div class="chat-input-container">
-    <!-- 1. AM CORECTAT ID-UL AICI: message-input -->
-    <input type="text" id="message-input" placeholder="Scrie un mesaj către AI..." autocomplete="off">
-    <button id="image-quick-btn" title="Generează Imagine" onclick="insertImageCommand()" style="background: none; border: black; font-size: 24px; cursor: pointer;">🎨</button>
+<div class="input-container">
+    <!-- Butonul de imagini pe care îl ai deja -->
+    <button id="image-quick-btn" title="Generează Imagine" onclick="insertImageCommand()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🎨</button>
     
+    <!-- BUTONUL NOU DE ATAȘAMENT (AGRAFA) -->
+    <label for="file-upload" id="upload-btn" title="Atașează un document text/csv" style="font-size: 20px; cursor: pointer; margin-right: 10px; color: #fff;">📎</label>
+    <input type="file" id="file-upload" accept=".txt,.csv,.md" style="display: none;" onchange="handleFileUpload(event)">
     
-<!-- Bifa pentru Quick Chat (Incognito) -->
-    <div style="display: flex; align-items: center; gap: 5px; color: white; font-size: 14px;">
-        <input type="checkbox" id="quick-chat-toggle">
-        <label for="quick-chat-toggle" title="Nu salvează în istoric">Incognito</label>
+    <!-- Aici apare numele fișierului când îl încarci -->
+    <div id="file-preview" style="display: none; background: #444; padding: 5px 10px; border-radius: 5px; font-size: 12px; margin-right: 10px;">
+        <span id="file-name"></span>
+        <span onclick="removeFile()" style="cursor: pointer; color: red; margin-left: 5px; font-weight: bold;">X</span>
     </div>
-    
-    <button onclick="sendMessage()" class="send-btn">
-        <span>Trimite</span> 
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/></svg>
-    </button>
+
+    <input type="text" id="message-input" placeholder="Scrie un mesaj..." onkeypress="handleEnter(event)">
+    <button onclick="sendMessage()">Trimite</button>
 </div>
             </div>
         </div>
