@@ -15,6 +15,13 @@ app = FastAPI(
     description="Platforma AI cu memorie comuna, credite si rutare multi-model",
     version="1.0.0"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # --- ADAUGĂ ACEST BLOC AICI ---
 @app.middleware("http")
 async def add_no_cache_headers(request: Request, call_next):
@@ -24,18 +31,10 @@ async def add_no_cache_headers(request: Request, call_next):
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse(url="/docs")
-# CORS pentru frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=False, # <--- AICI AM MODIFICAT
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 # Initializare DB la startup
 @app.on_event("startup")
 def on_startup():
@@ -46,7 +45,7 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(credits.router)
 app.include_router(payments.router)
-
+app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
 
 @app.get("/health")
 def health_check():
